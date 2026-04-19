@@ -1,0 +1,15 @@
+# Never commit real Instagram data.
+your_instagram_activity/
+messages/
+inbox/
+*.zip
+*.tar
+*.tar.gz
+
+# Editor / OS junk
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+node_modules/
