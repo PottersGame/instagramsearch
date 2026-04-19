@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'none'; font-src 'self' data:; media-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'none';" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<meta name="referrer" content="no-referrer" />
+<title>DM Finder — private Instagram chat search</title>
+<link rel="stylesheet" href="css/styles.css" />
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23111'/><text x='50%' y='56%' font-family='sans-serif' font-size='34' font-weight='700' text-anchor='middle' fill='%23fff'>D</text></svg>" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">D</span>
+    <div>
+      <h1>DM Finder</h1>
+      <p class="tag">private · offline · local-only search for Instagram DMs</p>
+    </div>
+  </div>
+  <nav>
+    <button id="navSearch" class="tab active" type="button">Search</button>
+    <button id="navThreads" class="tab" type="button">Conversations</button>
+    <button id="navTutorial" class="tab" type="button">How to export</button>
+    <button id="navPrivacy" class="tab" type="button">Privacy</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- LANDING / UPLOAD -->
+  <section id="landing" class="view">
+    <div class="card lift">
+      <h2>Load your Instagram data</h2>
+      <p class="muted">Pick the <code>your_instagram_activity/messages/inbox</code> folder from your export, or drop the whole extracted export folder. Everything is parsed locally in your browser — nothing is uploaded.</p>
+
+      <div id="dropzone" class="dropzone">
+        <div class="dz-inner">
+          <div class="dz-icon">↑</div>
+          <div class="dz-title">Drop your extracted export folder here</div>
+          <div class="dz-sub">or pick a folder / individual <code>message_*.json</code> files below</div>
+          <div class="dz-buttons">
+            <label class="btn primary">
+              Choose folder
+              <input id="folderInput" type="file" webkitdirectory directory multiple hidden />
+            </label>
+            <label class="btn">
+              Choose JSON files
+              <input id="fileInput" type="file" accept="application/json,.json" multiple hidden />
+            </label>
+          </div>
+          <div class="dz-hint">No account, no sign-in. Works with airplane mode on.</div>
+        </div>
+      </div>
+
+      <div id="loadStatus" class="status" hidden></div>
+
+      <details class="help">
+        <summary>First time? Read the export tutorial →</summary>
+        <p>Use the <strong>How to export</strong> tab above for step-by-step instructions with screenshots of where each option lives in Instagram's settings.</p>
+      </details>
+    </div>
+
+    <div class="card soft">
+      <h3>Why this app exists</h3>
+      <p>Instagram's built-in DM search is notoriously bad — it only matches the start of words, ignores context, and often just doesn't return anything. This tool indexes every message in your export so you can find <em>anything</em> anyone ever said to you, in milliseconds.</p>
+      <ul class="checks">
+        <li>Instant full-text search across every conversation</li>
+        <li>Per-person, per-date-range, and phrase filters</li>
+        <li>Jump-to-context: see the surrounding messages around any hit</li>
+        <li>Never leaves your device. Ever.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SEARCH -->
+  <section id="search" class="view" hidden>
+    <div class="card searchcard">
+      <div class="search-row">
+        <input id="q" type="search" placeholder="Search all messages…  (try: pizza, &quot;happy birthday&quot;, from:alex)" autocomplete="off" spellcheck="false" />
+        <button id="clearQ" class="btn subtle" type="button" title="Clear">✕</button>
+      </div>
+      <div class="filters">
+        <label>
+          Conversation
+          <select id="filterThread"><option value="">All conversations</option></select>
+        </label>
+        <label>
+          Sender
+          <select id="filterSender"><option value="">Anyone</option></select>
+        </label>
+        <label>
+          From
+          <input id="filterFrom" type="date" />
+        </label>
+        <label>
+          To
+          <input id="filterTo" type="date" />
+        </label>
+        <label class="inline">
+          <input id="filterCase" type="checkbox" /> Match case
+        </label>
+        <label class="inline">
+          <input id="filterWhole" type="checkbox" /> Whole word
+        </label>
+      </div>
+      <div id="searchMeta" class="meta muted"></div>
+    </div>
+
+    <div id="results" class="results"></div>
+
+    <dialog id="contextDialog" class="context-dialog">
+      <header class="ctx-header">
+        <div>
+          <div id="ctxThread" class="ctx-thread"></div>
+          <div id="ctxDate" class="ctx-date muted"></div>
+        </div>
+        <button class="btn subtle" type="button" id="ctxClose">Close</button>
+      </header>
+      <div id="ctxBody" class="ctx-body"></div>
+      <footer class="ctx-footer">
+        <button id="ctxEarlier" class="btn" type="button">← Earlier</button>
+        <button id="ctxLater" class="btn" type="button">Later →</button>
+      </footer>
+    </dialog>
+  </section>
+
+  <!-- THREADS -->
+  <section id="threads" class="view" hidden>
+    <div class="card">
+      <input id="threadFilter" type="search" placeholder="Filter conversations by name…" autocomplete="off" />
+    </div>
+    <div id="threadList" class="thread-list"></div>
+  </section>
+
+  <!-- TUTORIAL -->
+  <section id="tutorial" class="view" hidden>
+    <div class="card">
+      <h2>How to export your Instagram chats</h2>
+      <p class="muted">Instagram calls this "Download your information." You'll request an archive, wait for the email, then extract the ZIP and load it here.</p>
+
+      <h3>Step 1 — Open the download tool</h3>
+      <ol>
+        <li>Open Instagram in a web browser and sign in.</li>
+        <li>Go to <strong>Settings → Accounts Center</strong> (left sidebar, bottom).</li>
+        <li>Click <strong>Your information and permissions → Download your information</strong>.</li>
+        <li>Click <strong>Download or transfer information</strong>, pick your account, and continue.</li>
+      </ol>
+
+      <h3>Step 2 — Choose what to export</h3>
+      <ol>
+        <li>Pick <strong>Some of your information</strong>.</li>
+        <li>Scroll down to the <em>Your Instagram activity</em> section and select only <strong>Messages</strong>. (You can include more if you want — the app ignores anything that isn't a message.)</li>
+        <li>Click <strong>Next</strong>.</li>
+      </ol>
+
+      <h3>Step 3 — Set the format</h3>
+      <ul>
+        <li><strong>Download to device</strong>.</li>
+        <li><strong>Date range:</strong> All time.</li>
+        <li><strong>Format:</strong> <em>JSON</em>. <span class="warn">This is critical — HTML exports will not work.</span></li>
+        <li><strong>Media quality:</strong> Low (faster download; the app is text-focused).</li>
+        <li>Click <strong>Create files</strong>.</li>
+      </ul>
+
+      <h3>Step 4 — Wait for Instagram's email</h3>
+      <p>Instagram will email you a download link when the archive is ready. This usually takes minutes but can take up to 48 hours for large accounts. Download the ZIP from that email link.</p>
+
+      <h3>Step 5 — Extract the ZIP</h3>
+      <ul>
+        <li><strong>Windows:</strong> right-click the ZIP → <em>Extract All…</em></li>
+        <li><strong>macOS:</strong> double-click the ZIP.</li>
+        <li><strong>Linux:</strong> <code>unzip instagram-*.zip</code></li>
+      </ul>
+
+      <h3>Step 6 — Load it here</h3>
+      <p>Go back to the <strong>Search</strong> tab and drop the extracted folder onto the upload box. The app will find the inbox automatically. For best performance, you can also drag just the <code>your_instagram_activity/messages/inbox</code> folder.</p>
+
+      <div class="callout">
+        <strong>Reminder:</strong> everything parses on your device. You could physically disconnect from the internet at this point — the app would still work.
+      </div>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section id="privacy" class="view" hidden>
+    <div class="card">
+      <h2>Privacy &amp; security</h2>
+      <p>This app is engineered so your Instagram data <strong>cannot leave your device</strong>, even if it wanted to.</p>
+
+      <h3>Hard guarantees</h3>
+      <ul class="checks">
+        <li><strong>No servers.</strong> The app is static files. There is no backend to send data to.</li>
+        <li><strong>No network requests.</strong> A Content Security Policy (<code>connect-src 'none'</code>) blocks the browser from making any outbound fetch, XHR, or WebSocket connection from this page.</li>
+        <li><strong>No third-party scripts.</strong> No analytics, no CDNs, no trackers. Everything is local.</li>
+        <li><strong>No persistence by default.</strong> Messages live in RAM only. Close the tab and they're gone.</li>
+        <li><strong>Works fully offline.</strong> Load the page once, then switch to airplane mode. Everything still works.</li>
+      </ul>
+
+      <h3>How to verify</h3>
+      <ol>
+        <li>Open your browser's DevTools → <em>Network</em> tab.</li>
+        <li>Load this page and use the app normally.</li>
+        <li>You'll see zero requests after the initial asset load.</li>
+        <li>Or just turn off Wi-Fi entirely — the app still works.</li>
+      </ol>
+
+      <h3>Clear your data</h3>
+      <p>Everything you loaded is cleared when you close or refresh the tab. You can also click the button below to wipe the in-memory index immediately.</p>
+      <button id="wipe" class="btn danger" type="button">Wipe loaded data now</button>
+
+      <h3>Source</h3>
+      <p>Every line of code is in this repository — you can read the <code>js/</code> folder and audit it. No minification, no obfuscation.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <span class="muted">DM Finder · runs entirely on your device · <span id="statFooter"></span></span>
+</footer>
+
+<script src="js/parser.js"></script>
+<script src="js/search.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
